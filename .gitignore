@@ -131,7 +131,7 @@ dmypy.json
 test.py
 
 /data
-/log
+/logs
 /models
 /reports
 

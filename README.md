@@ -9,8 +9,6 @@ A web app to segment the lung cancer
 ├── README.md          <- The top-level README for developers using this project.
 ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
 │                         generated with `pip freeze > requirements.txt`
-├── app.py             <- The main file to start Flask web server.
-│
 ├── app                
 |   ├── frontend       <- A folder for frontend files.
 │   └── backend        <- A folder for backend files.
