@@ -112,7 +112,7 @@ def download_data() -> None:
         log.error("Not able to download.")
         print(f"Not able to download.\nPlease download from folowing link and extract it in data/raw folder.\n{link}")
 
-def setup():
+def setup() -> None:
     """
     A function to setup the project
     """
