@@ -100,16 +100,17 @@ def download_data() -> None:
     """
     id = "1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi"
     output = os.path.join("data", "raw", "Task06_Lung.tar")
-    gdown.download(id=id, output=output, quiet=False, resume=True)
     log.info("Downloading data from Drive")
+    gdown.download(id=id, output=output, quiet=False, resume=True)
     try:
         log.info("Extracting data from tar file")
         my_tar = tarfile.open(output)
         my_tar.extractall(os.path.join("data", "raw"))
         my_tar.close()
+        os.remove(output)
     except FileNotFoundError:
         link = "https://drive.google.com/uc?id=1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"
-        log.error("Not able to download.")
+        log.error("Not able to download.\nPlease download from folowing link and extract it in data/raw folder.\n{link}")
         print(f"Not able to download.\nPlease download from folowing link and extract it in data/raw folder.\n{link}")
 
 def setup() -> None:
