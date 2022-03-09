@@ -140,10 +140,11 @@ def download_data() -> None:
         except FileNotFoundError:
             if tried == 2:
                 ids = "1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"
-                log.warning("Changing id to {ids}")
+                log.warning(f"Changing id to {ids}")
                 continue
             elif tried == 5:
                 log.error(DOWNLOAD_ERROR)
+                break
             tried += 1
 
 def setup() -> None:
