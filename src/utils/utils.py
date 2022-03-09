@@ -1,6 +1,7 @@
 import time
 import yaml
 import os
+import shutil
 import boto3
 import gdown
 import tarfile
@@ -110,6 +111,12 @@ def create_dir() -> None:
     for path in dir:
         os.makedirs(path, exist_ok=True)
 
+def move_file(source, dest):
+    allfiles = os.listdir(source)
+    for f in allfiles:
+        shutil.move(source + f, dest + f)
+    os.remove(source)
+
 def extract_data(file_path) -> None:
     """
     A function to extract data from tar file
@@ -121,16 +128,20 @@ def extract_data(file_path) -> None:
     my_tar.extractall(os.path.join("data", "raw"))
     my_tar.close()
     os.remove(file_path)
-    with open(os.path.join("data", "raw", "status"), "wb") as f:
+    move_file(os.path.join("data", "raw", "Task06_Lung"), os.path.join("data", "raw"))
+    with open(os.path.join("data", "raw", "status"), "w") as f:
         f.write(1)
     
 def download_data() -> None:
     """
     A function to download data from Google Drive.
     """
-    with open(os.path.join("data", "raw", "status"), "rb") as f:
-        status = f.read()
-    if int(status) == 1:
+    try:
+        with open(os.path.join("data", "raw", "status"), "r") as f:
+            status = f.read()
+    except FileNotFoundError:
+        status = 0
+    if int(status):
         download = False
     else:
         download = True
