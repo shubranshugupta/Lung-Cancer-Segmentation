@@ -6,7 +6,7 @@ import gdown
 import tarfile
 import logging as log
 from botocore.exceptions import ClientError
-from .error import AWSCredentialError
+from .error import AWSCredentialError, DownloadDataError
 
 DOWNLOAD_ERROR = f"""
 Failed to download. Please download from folowing link in data/raw folder.
@@ -121,14 +121,22 @@ def extract_data(file_path) -> None:
     my_tar.extractall(os.path.join("data", "raw"))
     my_tar.close()
     os.remove(file_path)
+    with open(os.path.join("data", "raw", "status"), "wb") as f:
+        f.write(1)
     
 def download_data() -> None:
     """
     A function to download data from Google Drive.
     """
+    with open(os.path.join("data", "raw", "status"), "rb") as f:
+        status = f.read()
+    if int(status) == 1:
+        download = False
+    else:
+        download = True
     tried = 0
     ids = "1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi"
-    while True:
+    while download:
         output = os.path.join("data", "raw", "Task06_Lung.tar")
         log.info(f"Downloading data from Drive with id = {ids} tries = {tried+1}")
         gdown.download(id=ids, output=output, quiet=False, resume=True)
@@ -141,10 +149,9 @@ def download_data() -> None:
             if tried == 2:
                 ids = "1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"
                 log.warning(f"Changing id to {ids}")
-                continue
             elif tried == 5:
                 log.error(DOWNLOAD_ERROR)
-                break
+                raise DownloadDataError(DOWNLOAD_ERROR)
             tried += 1
 
 def setup() -> None:
