@@ -144,6 +144,7 @@ def download_data() -> None:
                 continue
             elif tried == 5:
                 log.error(DOWNLOAD_ERROR)
+            tried += 1
 
 def setup() -> None:
     """
