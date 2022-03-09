@@ -8,6 +8,22 @@ import logging as log
 from botocore.exceptions import ClientError
 from .error import AWSCredentialError
 
+DOWNLOAD_ERROR = f"""
+Failed to download. Please download from folowing link in data/raw folder.
+    https://drive.google.com/uc?id=1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU
+
+if you are using Colad try:
+    `!gdown --id 1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU --output data/raw` 
+                        or 
+    `!gdown --id 1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi --output data/raw`
+
+For extracting:
+    ```python
+    from src.utils.utils import extract_data
+    extract_data(os.path.join("data", "raw", "Task06_Lung.tar"))
+    ```
+"""
+
 def read_yaml(file:str) -> dict:
     with open(file, 'r') as f:
         return yaml.load(f, Loader=yaml.SafeLoader)
@@ -93,25 +109,41 @@ def create_dir() -> None:
     log.info("Creating directories.")
     for path in dir:
         os.makedirs(path, exist_ok=True)
+
+def extract_data(file_path) -> None:
+    """
+    A function to extract data from tar file
+
+    :param file_path: path to tar file
+    """
+    log.info("Extracting data from tar file")
+    my_tar = tarfile.open(file_path)
+    my_tar.extractall(os.path.join("data", "raw"))
+    my_tar.close()
+    os.remove(file_path)
     
 def download_data() -> None:
     """
     A function to download data from Google Drive.
     """
-    id = "1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi"
-    output = os.path.join("data", "raw", "Task06_Lung.tar")
-    log.info("Downloading data from Drive")
-    gdown.download(id=id, output=output, quiet=False, resume=True)
-    try:
-        log.info("Extracting data from tar file")
-        my_tar = tarfile.open(output)
-        my_tar.extractall(os.path.join("data", "raw"))
-        my_tar.close()
-        os.remove(output)
-    except FileNotFoundError:
-        link = "https://drive.google.com/uc?id=1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"
-        log.error("Not able to download.\nPlease download from folowing link and extract it in data/raw folder.\n{link}")
-        print(f"Not able to download.\nPlease download from folowing link and extract it in data/raw folder.\n{link}")
+    tried = 0
+    ids = "1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi"
+    while True:
+        output = os.path.join("data", "raw", "Task06_Lung.tar")
+        log.info(f"Downloading data from Drive with id = {ids} tries = {tried+1}")
+        gdown.download(id=ids, output=output, quiet=False, resume=True)
+
+        try:
+            log.info("Extracting data from tar file")
+            extract_data(output)
+            break
+        except FileNotFoundError:
+            if tried == 2:
+                ids = "1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"
+                log.warning("Changing id to {ids}")
+                continue
+            elif tried == 5:
+                log.error(DOWNLOAD_ERROR)
 
 def setup() -> None:
     """
