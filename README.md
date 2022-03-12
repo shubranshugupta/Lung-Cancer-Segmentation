@@ -32,7 +32,7 @@ A web app to segment the lung cancer
 │   ├── data           <- Scripts to download or generate data
 │   │   └── make_dataset.py
 │   │
-│   ├── features       <- Scripts to turn raw data into features for modeling
+│   ├── utils          <- Common function and utilities
 │   │   └── build_features.py
 │   │
 │   ├── models         <- Scripts to train models and then use trained models to make
