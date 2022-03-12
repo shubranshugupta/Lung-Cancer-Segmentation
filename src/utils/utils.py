@@ -111,11 +111,20 @@ def create_dir() -> None:
     for path in dir:
         os.makedirs(path, exist_ok=True)
 
-def move_file(source, dest):
+def move_file(source, dest) -> None:
+    """
+    A function to move file from source to dest
+    :param source: source file
+    :param dest: destination file
+
+    """
     allfiles = os.listdir(source)
     for f in allfiles:
-        shutil.move(source + f, dest + f)
-    os.remove(source)
+        try:
+            shutil.move(os.path.join(source, f), os.path.join(dest, f))
+        except FileNotFoundError:
+            continue
+    os.rmdir(source)
 
 def extract_data(file_path) -> None:
     """
@@ -123,47 +132,49 @@ def extract_data(file_path) -> None:
 
     :param file_path: path to tar file
     """
-    log.info("Extracting data from tar file")
-    my_tar = tarfile.open(file_path)
-    my_tar.extractall(os.path.join("data", "raw"))
-    my_tar.close()
-    os.remove(file_path)
-    move_file(os.path.join("data", "raw", "Task06_Lung"), os.path.join("data", "raw"))
-    with open(os.path.join("data", "raw", "status"), "w") as f:
-        f.write(1)
+    with open(os.path.join("data", "raw", "status"), "r") as f:
+        status = f.read()
+    if status == "down":
+        log.info("Extracting data from tar file")
+        my_tar = tarfile.open(file_path)
+        my_tar.extractall(os.path.join("data", "raw"))
+        my_tar.close()
     
 def download_data() -> None:
     """
     A function to download data from Google Drive.
     """
-    try:
-        with open(os.path.join("data", "raw", "status"), "r") as f:
-            status = f.read()
-    except FileNotFoundError:
-        status = 0
-    if int(status):
-        download = False
-    else:
-        download = True
-    tried = 0
-    ids = "1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi"
-    while download:
+    with open(os.path.join("data", "raw", "status"), "r") as f:
+        status = f.read()
+    
+    if status == "none":
+        ids = ["1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi", "1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"]
+        idx = 0
+        tried = 0
         output = os.path.join("data", "raw", "Task06_Lung.tar")
-        log.info(f"Downloading data from Drive with id = {ids} tries = {tried+1}")
-        gdown.download(id=ids, output=output, quiet=False, resume=True)
+        while True:
+            if os.path.exists(output):
+                with open(os.path.join("data", "raw", "status"), "w") as f:
+                    f.write("down")
+                break
+            else:
+                log.info(f"Downloading data from Drive with id = {ids} tries = {tried+1}")
+                gdown.download(id=ids[idx], output=output, quiet=False, resume=True)
+                tried += 1
 
-        try:
-            log.info("Extracting data from tar file")
-            extract_data(output)
-            break
-        except FileNotFoundError:
-            if tried == 2:
-                ids = "1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"
-                log.warning(f"Changing id to {ids}")
-            elif tried == 5:
-                log.error(DOWNLOAD_ERROR)
-                raise DownloadDataError(DOWNLOAD_ERROR)
-            tried += 1
+            if tried == 3:
+                idx = 1
+                log.warning(f"Changing id to {ids[idx]}.")
+                time.sleep(5)
+            if tried == 6:
+                log.error("Failed to download data from Drive.")
+                break
+
+        if os.path.exists(output):
+            log.info("Data is been downloaded successfully.")
+        else:
+            log.error(DOWNLOAD_ERROR)
+            raise DownloadDataError(DOWNLOAD_ERROR)
 
 def setup() -> None:
     """
@@ -173,7 +184,16 @@ def setup() -> None:
     create_dir()
 
     # Downloading data
+    with open(os.path.join("data", "raw", "status"), "w") as f:
+        f.write("none")
     download_data()
+
+    # Extracting data
+    extract_data(os.path.join("data", "raw", "Task06_Lung.tar"))
+
+    # Moving files
+    move_file(os.path.join("data", "raw", "Task06_Lung"), os.path.join("data", "raw"))
+    os.remove(os.path.join("data", "raw", "Task06_Lung.tar"))
 
     # Checking AWS credential
     check_aws_credential()
