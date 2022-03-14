@@ -120,13 +120,14 @@ def move_file(source, dest) -> None:
     """
     allfiles = os.listdir(source)
     log.info(f"Moving all files from {source} to {dest}")
-    for f in allfiles:
+    for file in allfiles:
         try:
-            shutil.move(os.path.join(source, f), os.path.join(dest, f))
+            shutil.move(os.path.join(source, file), os.path.join(dest, file))
         except FileNotFoundError:
             continue
     os.rmdir(source)
-    f.write("move")
+    with open(os.path.join("data", "raw", "status"), "w") as f:
+        f.write("move")
             
 
 def extract_data(file_path) -> None:
