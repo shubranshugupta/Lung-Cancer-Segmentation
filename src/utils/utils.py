@@ -7,7 +7,7 @@ import gdown
 import tarfile
 import logging as log
 from botocore.exceptions import ClientError, NoCredentialsError
-from .error import AWSCredentialError, DownloadDataError
+from .error import AWSCredentialError, DownloadDataError, MyNoCredentialError
 
 DOWNLOAD_ERROR = f"""
 Failed to download. Please download from folowing link in data/raw folder.
@@ -101,7 +101,7 @@ def check_aws_credential() -> None:
         raise AWSCredentialError("AWS Credentials are not valid. Please run 'aws configure' to set them.")
     except NoCredentialsError:
         log.error("Credentials are not set.\nTry to run 'aws configure' to set them.")
-        raise NoCredentialsError("Credentials are not set. Please run 'aws configure' to set them.")
+        raise MyNoCredentialError("Credentials are not set. Please run 'aws configure' to set them.")
 
 def create_dir() -> None:
     """
