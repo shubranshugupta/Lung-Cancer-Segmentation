@@ -186,8 +186,9 @@ def setup() -> None:
     create_dir()
 
     # Creating empty file
-    with open(os.path.join("data", "raw", "status"), "w") as f:
-        pass
+    if not os.path.exists(os.path.join("data", "raw", "status")):
+        with open(os.path.join("data", "raw", "status"), "w") as f:
+            pass
     
     # Downloading data
     with open(os.path.join("data", "raw", "status"), "r") as f:
