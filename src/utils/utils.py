@@ -6,7 +6,7 @@ import boto3
 import gdown
 import tarfile
 import logging as log
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 from .error import AWSCredentialError, DownloadDataError
 
 DOWNLOAD_ERROR = f"""
@@ -99,6 +99,9 @@ def check_aws_credential() -> None:
     except ClientError:
         log.error("AWS Credentials are not valid\nTry to run 'aws configure' to set them.")
         raise AWSCredentialError("AWS Credentials are not valid. Please run 'aws configure' to set them.")
+    except NoCredentialsError:
+        log.error("Credentials are not set.\nTry to run 'aws configure' to set them.")
+        raise NoCredentialsError("Credentials are not set. Please run 'aws configure' to set them.")
 
 def create_dir() -> None:
     """
