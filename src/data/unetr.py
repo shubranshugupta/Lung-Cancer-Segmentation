@@ -21,7 +21,7 @@ class LungDataModule(pl.LightningDataModule):
         num_workers:int=1) -> None:
         '''
         Initialize the class.
-        
+
         :param file_path: The path of the data.
         :param type: The type of the data ['train', 'val', 'test'].
         :param batch_size: The batch size.
@@ -44,7 +44,6 @@ class LungDataModule(pl.LightningDataModule):
 
         self.train_ds = CacheDataset(data=trainlist, transform=self.train_transform, cache_num=6, cache_rate=1.0, num_workers=5)
         self.val_ds = CacheDataset(data=vallist, transform=self.val_transform, cache_num=6, cache_rate=1.0, num_workers=5)
-        
 
     def train_dataloader(self):
         return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
