@@ -6,7 +6,19 @@ import pytorch_lightning as pl
 from monai.data import (
     CacheDataset,
     load_decathlon_datalist,
+    Dataset,
+    list_data_collate
 )
+
+def get_data(
+    data_dir: Union[str, os.PathLike],
+    transform: Compose,
+    idx: Optional[int] = 1) -> Dataset:
+    """
+    Load the data from the given directory.
+    """
+    data_list = load_decathlon_datalist(data_dir, True, 'train')
+    return Dataset(data_list, transform)[idx]
 
 
 class LungDataModule(pl.LightningDataModule):
@@ -42,11 +54,13 @@ class LungDataModule(pl.LightningDataModule):
         trainlist = load_decathlon_datalist(self.file_path, True, 'train')
         vallist = load_decathlon_datalist(self.file_path, True, 'val')
 
-        self.train_ds = CacheDataset(data=trainlist, transform=self.train_transform, cache_num=6, cache_rate=1.0, num_workers=5)
-        self.val_ds = CacheDataset(data=vallist, transform=self.val_transform, cache_num=6, cache_rate=1.0, num_workers=5)
+        self.train_ds = CacheDataset(data=trainlist, transform=self.train_transform, cache_num=4, cache_rate=1.0, num_workers=5)
+        self.val_ds = CacheDataset(data=vallist, transform=self.val_transform, cache_num=4, cache_rate=1.0, num_workers=5)
 
     def train_dataloader(self):
-        return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
+        return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, 
+                          num_workers=self.num_workers, pin_memory=True, collate_fn=list_data_collate)
 
     def val_dataloader(self):
-        return DataLoader(self.val_ds, batch_size=self.batch_size, num_workers=self.num_workers)
+        return DataLoader(self.val_ds, batch_size=self.batch_size, num_workers=self.num_workers,
+                          pin_memory=True)
