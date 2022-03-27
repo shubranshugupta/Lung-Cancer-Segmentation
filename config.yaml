@@ -1,1 +1,1 @@
-MLFLOW_TRACKING_URI: http://ec2-3-110-54-130.ap-south-1.compute.amazonaws.com:8000
+MLFLOW_TRACKING_URI: http://ec2-3-110-122-108.ap-south-1.compute.amazonaws.com:8000
