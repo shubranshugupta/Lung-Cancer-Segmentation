@@ -1,19 +1,20 @@
 import os
 import torch
 import mlflow
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Sequence
 import logging as log
 from mlflow.models import Model
 
 from .utils import get_value
 from .signature import Signature
 from .logging import MyMLFlowLogger
+from src import ROOT_FOLDER
 
 
 def mlflow_setup(
     experiment_name:str,
-    input_data_size:Tuple[int],
-    output_data_size:Tuple[int],
+    input_data_size:Sequence[int],
+    output_data_size:Sequence[int],
     hyperparameters:Dict[str, Any],
 ) -> Tuple[MyMLFlowLogger, Model, Signature]:
     """
@@ -46,11 +47,11 @@ def mlflow_setup(
 
     log.info("Initializing MLFlow Logger..")
     tracking_uri = get_value("config.yaml", "MLFLOW_TRACKING_URI")
+    
     log.info(f"MLFlow Experiment: {experiment_name}, MLFlow Tracking URI: {tracking_uri}")
     mlf_logger = MyMLFlowLogger(experiment_name=experiment_name, 
                                 tracking_uri=tracking_uri)
     mlf_run_id = mlf_logger.run_id
-
     # Defining Signature
     sample_inputs = torch.rand(input_data_size)
     sample_outputs = torch.rand(output_data_size)
@@ -65,28 +66,16 @@ def mlflow_setup(
                         run_id=mlf_run_id, flavors=mlflow.pytorch)
 
     # Logging Environment detail
-    conda_file = os.path.join(os.getcwd(), "conda_env.yml")
-    requirement_file = os.path.join(os.getcwd(), "requirements.txt")
+    conda_file = os.path.join(ROOT_FOLDER, "conda.yaml")
+    requirement_file = os.path.join(ROOT_FOLDER, "requirements.txt")
     mlf_logger.experiment.log_artifact(mlf_run_id, conda_file, "Model")
     mlf_logger.experiment.log_artifact(mlf_run_id, requirement_file, "Model")
     log.info("Saving Conda and Requirement files.")
 
-    # Hyperparameters
-    # epoch = 10
-    # batch_size = 32
-    # test_size = 0.2
-    # dropout = 0.5
-    # lr = 1e-3
-    # batchnorm = False
 
     #Logging Hyperparameters
-    mlf_logger.experiment.log_hyperparams(hyperparameters)
-    # mlf_logger.experiment.log_param(mlf_run_id, "epoch", epoch)
-    # mlf_logger.experiment.log_param(mlf_run_id, "batch_size", batch_size)
-    # mlf_logger.experiment.log_param(mlf_run_id, "test_size", test_size)
-    # mlf_logger.experiment.log_param(mlf_run_id, "dropout", dropout)
-    # mlf_logger.experiment.log_param(mlf_run_id, "lr", lr)
-    # mlf_logger.experiment.log_param(mlf_run_id, "batchnorm", batchnorm)
+    for k, v in hyperparameters.items():
+        mlf_logger.experiment.log_param(mlf_run_id, k, v)
     log.info("Saving Hyperparameters.")
 
     return mlf_logger, model_log, signature

@@ -1,3 +1,4 @@
+import logging as log
 from pytorch_lightning.callbacks import ModelCheckpoint
 from mlflow.models import Model
 from pytorch_lightning.utilities import rank_zero_only
@@ -33,6 +34,7 @@ class MyModelCheckpoint(ModelCheckpoint):
         else:
             example_inputs = torch.rand(shape).to(torch.device('cpu'))
         model = trace(pl_module, example_inputs=example_inputs)
+        log.info("Saving model to MLFlow..")
         self.mlflow_model.log(artifact_path="Model",
                               flavor=mlflow.pytorch,
                               pytorch_model=model,
