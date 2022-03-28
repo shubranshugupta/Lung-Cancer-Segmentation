@@ -8,6 +8,7 @@ import tarfile
 import logging as log
 from botocore.exceptions import ClientError, NoCredentialsError
 from .error import AWSCredentialError, DownloadDataError, MyNoCredentialError
+from src import ROOT_FOLDER
 
 DOWNLOAD_ERROR = f"""
 Failed to download. Please download from folowing link in data/raw folder.
@@ -57,7 +58,7 @@ def get_value(file:str, key:str) -> str:
     >>> get_value("config.yaml", "DATABASE.HOST")
     abcd
     """
-    file_path = os.path.join(os.getcwd(), file)
+    file_path = os.path.join(ROOT_FOLDER, file)
     data = read_yaml(file_path)
     for k in key.split("."):
         data = data[k]
@@ -108,8 +109,10 @@ def create_dir() -> None:
     A function to setup the Directory
     """
     # Checking for folder
-    dir = ["data", os.path.join("data", "raw"), os.path.join("data", "processed"), os.path.join("data", "processed", "train"), 
-           os.path.join("data", "interim"), "logs", "models", "reports"]
+    dir = [os.path.join(ROOT_FOLDER, "data"), os.path.join(ROOT_FOLDER, "data", "raw"), 
+           os.path.join(ROOT_FOLDER, "data", "processed"), 
+           os.path.join(ROOT_FOLDER, "data", "interim"), os.path.join(ROOT_FOLDER, "logs"), 
+           os.path.join(ROOT_FOLDER, "models"), os.path.join(ROOT_FOLDER, "reports")]
     log.info("Creating directories.")
     for path in dir:
         os.makedirs(path, exist_ok=True)
@@ -129,7 +132,7 @@ def move_file(source, dest) -> None:
         except FileNotFoundError:
             continue
     os.rmdir(source)
-    with open(os.path.join("data", "raw", "status"), "w") as f:
+    with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "w") as f:
         f.write("move")
             
 
@@ -141,9 +144,9 @@ def extract_data(file_path) -> None:
     """
     log.info("Extracting data from tar file")
     my_tar = tarfile.open(file_path)
-    my_tar.extractall(os.path.join("data", "raw"))
+    my_tar.extractall(os.path.join(ROOT_FOLDER, "data", "raw"))
     my_tar.close()
-    with open(os.path.join("data", "raw", "status"), "w") as f:
+    with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "w") as f:
         f.write("extract")
     
 def download_data() -> None:
@@ -153,10 +156,10 @@ def download_data() -> None:
     ids = ["1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi", "1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU"]
     idx = 0
     tried = 0
-    output = os.path.join("data", "raw", "Task06_Lung.tar")
+    output = os.path.join(ROOT_FOLDER, "data", "raw", "Task06_Lung.tar")
     while True:
         if os.path.exists(output):
-            with open(os.path.join("data", "raw", "status"), "w") as f:
+            with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "w") as f:
                 f.write("down")
             break
         else:
@@ -186,28 +189,29 @@ def setup() -> None:
     create_dir()
 
     # Creating empty file
-    if not os.path.exists(os.path.join("data", "raw", "status")):
-        with open(os.path.join("data", "raw", "status"), "w") as f:
+    if not os.path.exists(os.path.join(ROOT_FOLDER, "data", "raw", "status")):
+        with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "w") as f:
             pass
     
     # Downloading data
-    with open(os.path.join("data", "raw", "status"), "r") as f:
+    with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "r") as f:
         status = f.read()
         if status == "":
             download_data()
 
     # Extracting data
-    with open(os.path.join("data", "raw", "status"), "r") as f:
+    with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "r") as f:
         status = f.read()
         if status == "down":
-            extract_data(os.path.join("data", "raw", "Task06_Lung.tar"))
+            extract_data(os.path.join(ROOT_FOLDER, "data", "raw", "Task06_Lung.tar"))
 
     # Moving files
-    with open(os.path.join("data", "raw", "status"), "r") as f:
+    with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "r") as f:
         status = f.read()
         if status == "extract":
-            move_file(os.path.join("data", "raw", "Task06_Lung"), os.path.join("data", "raw"))
-            os.remove(os.path.join("data", "raw", "Task06_Lung.tar"))
+            move_file(os.path.join(ROOT_FOLDER, "data", "raw", "Task06_Lung"), 
+                      os.path.join(ROOT_FOLDER, "data", "raw"))
+            os.remove(os.path.join(ROOT_FOLDER, "data", "raw", "Task06_Lung.tar"))
 
     # Checking AWS credential
     check_aws_credential()
@@ -215,10 +219,10 @@ def setup() -> None:
     # Geting public DNS for mlflow server
     dns = get_public_ip(instance_id="i-0f7a0f90a77792a82")
     log.info(f"Public DNS for mlflow server: {dns}")
-    yaml_dict = read_yaml("config.yaml")
+    yaml_dict = read_yaml(os.path.join(ROOT_FOLDER, "config.yaml"))
     yaml_dict["MLFLOW_TRACKING_URI"] = f"http://{dns}:8000"
 
     log.info(f"Updating config.yaml with MLFLOW_TRACKING_URI: {yaml_dict['MLFLOW_TRACKING_URI']}")
-    write_yaml(yaml_dict, "config.yaml")
+    write_yaml(yaml_dict, os.path.join(ROOT_FOLDER, "config.yaml"))
 
     log.info("Setup complete")
