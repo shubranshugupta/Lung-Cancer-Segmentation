@@ -110,7 +110,7 @@ def create_dir() -> None:
     """
     # Checking for folder
     dir = [os.path.join(ROOT_FOLDER, "data"), os.path.join(ROOT_FOLDER, "data", "raw"), 
-           os.path.join(ROOT_FOLDER, "data", "processed"), os.path.join(ROOT_FOLDER, "data", "processed", "train"), 
+           os.path.join(ROOT_FOLDER, "data", "processed"), 
            os.path.join(ROOT_FOLDER, "data", "interim"), os.path.join(ROOT_FOLDER, "logs"), 
            os.path.join(ROOT_FOLDER, "models"), os.path.join(ROOT_FOLDER, "reports")]
     log.info("Creating directories.")
