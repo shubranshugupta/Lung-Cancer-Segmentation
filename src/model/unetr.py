@@ -84,8 +84,8 @@ class MyUNETR(pl.LightningModule):
     def training_epoch_end(self, outputs):
         avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
 
-        self.log("train_epoch_loss", avg_loss.detach().numpy(), logger=True)
-        self.epoch_loss_values.append(avg_loss.detach().numpy())
+        self.log("train_epoch_loss", avg_loss.to("cpu").detach().numpy(), logger=True)
+        self.epoch_loss_values.append(avg_loss.to("cpu").detach().numpy())
 
     def validation_step(self, batch, batch_idx):
         images, labels = batch["image"], batch["label"]
