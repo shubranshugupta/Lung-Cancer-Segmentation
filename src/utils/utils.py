@@ -1,5 +1,4 @@
-from ctypes import Union
-from msilib.schema import Patch
+from typing import Union
 import pathlib
 import time
 import yaml
