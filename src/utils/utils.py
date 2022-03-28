@@ -1,3 +1,6 @@
+from ctypes import Union
+from msilib.schema import Patch
+import pathlib
 import time
 import yaml
 import os
@@ -117,7 +120,7 @@ def create_dir() -> None:
     for path in dir:
         os.makedirs(path, exist_ok=True)
 
-def move_file(source, dest) -> None:
+def move_file(source:Union[pathlib.Path, str], dest:Union[pathlib.Path, str]) -> None:
     """
     A function to move file from source to dest
     :param source: source file
@@ -134,9 +137,12 @@ def move_file(source, dest) -> None:
     os.rmdir(source)
     with open(os.path.join(ROOT_FOLDER, "data", "raw", "status"), "w") as f:
         f.write("move")
+
+def copy_file(source:Union[pathlib.Path, str], dest:Union[pathlib.Path, str]) -> None:
+    shutil.copyfile(source, dest)
             
 
-def extract_data(file_path) -> None:
+def extract_data(file_path:Union[pathlib.Path, str]) -> None:
     """
     A function to extract data from tar file
 
@@ -212,6 +218,12 @@ def setup() -> None:
             move_file(os.path.join(ROOT_FOLDER, "data", "raw", "Task06_Lung"), 
                       os.path.join(ROOT_FOLDER, "data", "raw"))
             os.remove(os.path.join(ROOT_FOLDER, "data", "raw", "Task06_Lung.tar"))
+    
+    # Changing dataset
+    copy_file(
+        os.path.join(ROOT_FOLDER, "artifacts", "dataset.json"),
+        os.path.join(ROOT_FOLDER, "data", "raw", "dataset.json")
+    )
 
     # Checking AWS credential
     check_aws_credential()
