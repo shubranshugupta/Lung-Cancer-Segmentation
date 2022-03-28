@@ -64,9 +64,9 @@ def get_value(file:str, key:str) -> str:
         data = data[k]
     return data
 
-def get_public_dns(instance_id:str=None) -> str:
+def get_public_ip(instance_id:str=None) -> str:
     """
-    A function to get public DNS for an instance
+    A function to get public IP for an instance
     :param instance_id: instance id
     """
     ec2_client = boto3.client("ec2", region_name="ap-south-1")
@@ -76,17 +76,17 @@ def get_public_dns(instance_id:str=None) -> str:
     for reservation in reservations:
         for instance in reservation['Instances']:
             if instance["State"]["Name"] == "running":
-                ips.append(instance.get("PublicDnsName"))
+                ips.append(instance.get("PublicIpAddress"))
             elif instance["State"]["Name"] == "pending":
                 log.info("Instance is not running yet. Please wait for a while tryig again.")
                 time.sleep(20)
-                ips.append(get_public_dns(instance_id))
+                ips.append(get_public_ip(instance_id))
             else:
                 log.warning(f"Instance {instance_id} is not running.")
                 log.info(f"Starting instance with id={instance_id}")
                 ec2_client.start_instances(InstanceIds=[instance_id])
                 time.sleep(10)
-                ips.append(get_public_dns(instance_id))
+                ips.append(get_public_ip(instance_id))
     return ips[0]
 
 def check_aws_credential() -> None:
@@ -217,7 +217,7 @@ def setup() -> None:
     check_aws_credential()
 
     # Geting public DNS for mlflow server
-    dns = get_public_dns(instance_id="i-0f7a0f90a77792a82")
+    dns = get_public_ip(instance_id="i-0f7a0f90a77792a82")
     log.info(f"Public DNS for mlflow server: {dns}")
     yaml_dict = read_yaml(os.path.join(ROOT_FOLDER, "config.yaml"))
     yaml_dict["MLFLOW_TRACKING_URI"] = f"http://{dns}:8000"
