@@ -1,13 +1,19 @@
-from typing import List, Optional, Any, Union, Sequence
+from typing import Union, Sequence
 from monai.losses import DiceCELoss
 from monai.inferers import sliding_window_inference
-from monai.config import print_config
 from monai.metrics import DiceMetric
 from monai.networks.nets import UNETR
-from monai.data import decollate_batch
 import torch
 from torch import optim
 import pytorch_lightning as pl
+from monai.data import decollate_batch
+
+from monai.transforms import (
+    Activations,
+    AsDiscrete,
+    Compose,
+    EnsureType,
+)
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -41,10 +47,12 @@ class MyUNETR(pl.LightningModule):
  
         self.lr = lr
         self.roi_size = img_size
+
         self.loss_function = DiceCELoss(sigmoid=True)
-        self.dice_metric = DiceMetric(
-            include_background=False, reduction="mean", get_not_nans=False
-        )
+        self.dice_metric = DiceMetric(include_background=True, reduction="mean")
+
+        self.post_trans = Compose([EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
+
         self.best_val_dice = 0
         self.best_val_epoch = 0
         self.metric_values = []
@@ -71,7 +79,7 @@ class MyUNETR(pl.LightningModule):
             ),
             "monitor": "val_epoch_loss",
         }
-        return [self.optimizer], [self.scheduler]
+        return [self.optimizer], self.scheduler
         # return optimizer
 
     def training_step(self, batch, batch_idx):
@@ -84,7 +92,7 @@ class MyUNETR(pl.LightningModule):
     def training_epoch_end(self, outputs):
         avg_loss = torch.stack([x["loss"] for x in outputs]).mean()
 
-        self.log("train_epoch_loss", avg_loss.to("cpu").detach().numpy(), logger=True)
+        self.log("train_epoch_loss", avg_loss.to("cpu").detach().numpy().item(), logger=True)
         self.epoch_loss_values.append(avg_loss.to("cpu").detach().numpy())
 
     def validation_step(self, batch, batch_idx):
@@ -95,6 +103,7 @@ class MyUNETR(pl.LightningModule):
             images, roi_size, sw_batch_size, self.forward
         )
         loss = self.loss_function(outputs, labels)
+        outputs = [self.post_trans(i) for i in decollate_batch(outputs)]
         self.dice_metric(y_pred=outputs, y=labels)
         return {"val_loss": loss, "val_number": len(outputs)}
 
