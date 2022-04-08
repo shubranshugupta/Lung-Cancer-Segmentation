@@ -13,18 +13,18 @@ from .error import AWSCredentialError, DownloadDataError, MyNoCredentialError
 from src import ROOT_FOLDER, DATA_DIR
 
 DOWNLOAD_ERROR = f"""
-Failed to download. Please download from folowing link in data/raw folder.
+Failed to download. Please download from folowing link in data folder.
     https://drive.google.com/uc?id=1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU
 
 if you are using Colad try:
-    `!gdown --id 1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU --output data/raw` 
+    `!gdown --id 1-021ruCLpzp2tH5hU4PFm0r0AJBiulQU --output data` 
                         or 
-    `!gdown --id 1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi --output data/raw`
+    `!gdown --id 1I1LR7XjyEZ-VBQ-Xruh31V7xExMjlVvi --output data`
 
 For extracting:
     ```python
     from src.utils.utils import extract_data
-    extract_data(os.path.join("data", "raw", "Task06_Lung.tar"))
+    extract_data(os.path.join("data", "Task06_Lung.tar"))
     ```
 """
 
